@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Slider Example</title>
+    <style>
+      section {
+        height: 800px; /* Adjust the height of sections as needed */
+        background-color: lightgray;
+      }
+
+      #slider {
+        position: relative;
+        height: 33vh;
+        overflow: hidden;
+      }
+
+      .slide {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+
+      .slide.active {
+        opacity: 1;
+      }
+
+      .pager {
+        position: absolute;
+        height: 100%;
+        width: 30px;
+        right: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: solid 1px white;
+        margin: 10px 0;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+      }
+
+      .indicator.active {
+        background: white;
+      }
+      @media screen and (min-width: 480px) {
+        #slider {
+          height: 80vh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section></section>
+    <section></section>
+    <section></section>
+
+    <div id="slider">
+      <div class="pager">
+        <div class="indicator active"></div>
+        <div class="indicator"></div>
+        <div class="indicator"></div>
+        <div class="indicator"></div>
+      </div>
+      <div class="slide active" style="background-color: red"></div>
+      <div class="slide" style="background-color: green"></div>
+      <div class="slide" style="background-color: blue"></div>
+      <div class="slide" style="background-color: rgb(121, 121, 23)"></div>
+    </div>
+
+    <section></section>
+    <section></section>
+    <section></section>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        var slider = $("#slider");
+        var pager = $(".pager").find(".indicator");
+        var slides = slider.find(".slide");
+        var len = slides.length;
+        var cur = 0;
+        var isStopped = false;
+
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                $("html, body").animate(
+                  {
+                    scrollTop:
+                      entry.target.offsetTop -
+                      ($(window).height() - entry.target.offsetHeight) / 2,
+                  },
+                  500
+                );
+                $("html, body").css("overflow", "hidden");
+                isStopped = true;
+              }
+            });
+          },
+          { threshold: 0.5 }
+        );
+
+        observer.observe(slider[0]);
+
+        let isExecuting = false;
+
+        $(window).on("mousewheel DOMMouseScroll", function (e) {
+          if (!isExecuting && isStopped) {
+            isExecuting = true;
+            let p =
+              e.originalEvent.wheelDelta > 0 || e.originalEvent.detail < 0
+                ? -1
+                : 1;
+            if (p > 0 && cur < len - 1) {
+              cur++;
+            } else if (p < 0 && cur > 0) {
+              cur--;
+            } else {
+              isStopped = false;
+              $("html, body").css("overflow", "auto");
+            }
+            slides.removeClass("active");
+            slides.eq(cur).addClass("active");
+            pager.removeClass("active");
+            pager.eq(cur).addClass("active");
+
+            setTimeout(() => {
+              isExecuting = false;
+            }, 300);
+          }
+        });
+
+        $(window).on("touchstart", function (e) {
+          touchStartY = e.originalEvent.touches[0].clientY;
+        });
+
+        $(window).on("touchmove", function (e) {
+          if (!isExecuting && isStopped) {
+            isExecuting = true;
+
+            let touchEndY = e.originalEvent.touches[0].clientY;
+            let p = touchEndY > touchStartY ? -1 : 1;
+
+            if (p > 0 && cur < len - 1) {
+              cur++;
+            } else if (p < 0 && cur > 0) {
+              cur--;
+            } else {
+              isStopped = false;
+              $("html, body").css("overflow", "auto");
+            }
+
+            // Update slides and pager
+            slides.removeClass("active");
+            slides.eq(cur).addClass("active");
+            pager.removeClass("active");
+            pager.eq(cur).addClass("active");
+
+            setTimeout(() => {
+              isExecuting = false;
+            }, 300);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
